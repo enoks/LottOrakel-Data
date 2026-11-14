@@ -1,0 +1,36 @@
+name: Update draws
+
+on:
+  schedule:
+    # Draws: Wed 18:25, Sat 19:25 Berlin time. Cron is UTC (16/17 UTC in summer, 17/18 UTC in winter).
+    - cron: '*/15 16-23 * * 3'
+    - cron: '*/15 17-23 * * 6'
+    # Safety net; fails (= mail) if a draw is still missing the day after.
+    - cron: '0 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-draws
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - id: update
+        run: node scripts/update.mjs
+      - name: Commit new draws
+        if: steps.update.outputs.message != ''
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898276+github-actions[bot]@users.noreply.github.com'
+          git commit -am "${{ steps.update.outputs.message }}"
+          git push
