@@ -29,10 +29,12 @@ Raw URL: `https://raw.githubusercontent.com/enoks/LottOrakel-Data/main/draws.jso
 
 ## Updates
 
-A [GitHub Action](.github/workflows/update.yml) checks lotto.de every 15 minutes on Wednesday and
-Saturday evenings and commits new draws ([`scripts/update.mjs`](scripts/update.mjs)): it closes
+A [GitHub Action](.github/workflows/update.yml), started by an external cron through the GitHub API,
+checks lotto.de every 15 minutes on Wednesday 18:30–23:45 and Saturday 19:30–23:45 (Berlin) and
+commits new draws ([`scripts/update.mjs`](scripts/update.mjs)): it closes
 gaps of up to 10 draws and validates every draw (6 distinct numbers 1–49, Superzahl 0–9,
-Wednesday or Saturday). A daily run fails if a draw is still missing the day after.
+Wednesday or Saturday). The daily run (05:00, `verify=true`) fails if a draw is still missing the day after; it also
+re-checks the last 3 draws against lotto.de and takes over corrections (commit "Correct draw(s) …").
 
 ## Sources and license
 

@@ -1,13 +1,17 @@
 name: Update draws
 
+# Started by an external cron through the GitHub API (no GitHub schedule), Berlin time:
+#   every 15 min Wed 18:30-23:45 and Sat 19:30-23:45 (draws 18:25 / 19:25), verify=false
+#   daily 05:00, verify=true: re-checks the last draws; fails (= mail) if a draw is still missing
+#   POST https://api.github.com/repos/enoks/LottOrakel-Data/actions/workflows/update.yml/dispatches
+#   {"ref": "main", "inputs": {"verify": "true"}}
 on:
-  schedule:
-    # Draws: Wed 18:25, Sat 19:25 Berlin time. Cron is UTC (16/17 UTC in summer, 17/18 UTC in winter).
-    - cron: '*/15 16-23 * * 3'
-    - cron: '*/15 17-23 * * 6'
-    # Safety net; fails (= mail) if a draw is still missing the day after.
-    - cron: '0 5 * * *'
   workflow_dispatch:
+    inputs:
+      verify:
+        description: Re-check the last 3 draws against lotto.de (daily run)
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -27,6 +31,9 @@ jobs:
           node-version: 22
       - id: update
         run: node scripts/update.mjs
+        env:
+          # format(): the API may send the boolean as a string.
+          VERIFY: ${{ format('{0}', inputs.verify) == 'true' && '1' || '0' }}
       - name: Commit new draws
         if: steps.update.outputs.message != ''
         run: |
