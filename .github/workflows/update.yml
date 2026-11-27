@@ -41,3 +41,10 @@ jobs:
           git config user.email '41898276+github-actions[bot]@users.noreply.github.com'
           git commit -am "${{ steps.update.outputs.message }}"
           git push
+      # Rebuilds the LottOrakel web app with the new draws (prerendered statistics for crawlers).
+      # Secret LOTTORAKEL_DISPATCH_TOKEN: fine-grained PAT, only enoks/LottOrakel, Contents: write.
+      - name: Trigger web build
+        if: steps.update.outputs.message != ''
+        env:
+          GH_TOKEN: ${{ secrets.LOTTORAKEL_DISPATCH_TOKEN }}
+        run: gh api repos/enoks/LottOrakel/dispatches -f event_type=draws-updated -f "client_payload[sha]=$(git rev-parse HEAD)"
